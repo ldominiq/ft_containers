@@ -6,6 +6,8 @@
 #define FT_VECTOR_HPP
 
 #include <memory>
+#include "random_access_iterator.hpp"
+#include "iterator.hpp"
 
 namespace ft {
 
@@ -28,8 +30,6 @@ namespace ft {
 
         /*  The first template parameter (T)    */
         typedef T                                               value_type;
-        /*  The first template parameter (T)    */
-        typedef T const                                         const_value_type;
         /*  The second template parameter (Alloc), `defaults to: allocator<value_type>` */
         typedef Alloc                                           allocator_type;
         /*  allocator_type::reference, defaults to `value_type&`    */
@@ -42,16 +42,16 @@ namespace ft {
         typedef typename allocator_type::const_pointer          const_pointer;
 
         /*  a random access iterator to value_type */
-//        typedef ft::random_access_iterator<value_type>          iterator;
+        typedef ft::random_access_iterator<value_type>          iterator;
 
         /*  a random access iterator to const value_type */
-//        typedef ft::random_access_iterator<const_value_type>    const_iterator;
+        typedef ft::random_access_iterator<const value_type>    const_iterator;
 
         /* 	reverse_iterator<iterator>  */
-//        typedef ft::reverse_iterator<iterator>                  reverse_iterator;
+        typedef ft::reverse_iterator<iterator>                  reverse_iterator;
 
         /*  reverse_iterator<const_iterator>    */
-//        typedef ft::reverse_iterator<const_iterator>            const_reverse_iterator;
+        typedef ft::reverse_iterator<const_iterator>            const_reverse_iterator;
 
         /*  a signed integral type, identical to:    iterator_traits<iterator>::difference_type */
         typedef typename allocator_type::difference_type        difference_type;
@@ -240,11 +240,6 @@ namespace ft {
          * Note that the resulting vector capacity may be equal or greater than n.
          */
         void reserve (size_type n);
-
-        /**
-         * Requests the container to reduce its capacity to fit its size.
-         */
-        void shrink_to_fit();
 
 
         //TODO: implement element access functions
@@ -447,7 +442,8 @@ namespace ft {
          * @param rhs see -> lhs
          * @return true if the condition holds, and false otherwise.
          */
-        template <class T, class Alloc>  bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+        template < T, Alloc>
+        bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 
         /**
          * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -458,7 +454,8 @@ namespace ft {
          * @param rhs see -> lhs
          * @return true if the condition holds, and false otherwise.
          */
-        template <class T, class Alloc>  bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+        template < T, Alloc>
+        bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 
         /**
          * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -469,7 +466,8 @@ namespace ft {
          * @param rhs see -> lhs
          * @return true if the condition holds, and false otherwise.
          */
-        template <class T, class Alloc>  bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+        template < T, Alloc>
+        bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 
         /**
          * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -480,7 +478,8 @@ namespace ft {
          * @param rhs see -> lhs
          * @return true if the condition holds, and false otherwise.
          */
-        template <class T, class Alloc>  bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+        template < T, Alloc>
+        bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 
         /**
          * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -491,7 +490,8 @@ namespace ft {
          * @param rhs see -> lhs
          * @return true if the condition holds, and false otherwise.
          */
-        template <class T, class Alloc>  bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+        template < T, Alloc>
+        bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 
         /**
          * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -502,7 +502,8 @@ namespace ft {
          * @param rhs see -> lhs
          * @return true if the condition holds, and false otherwise.
          */
-        template <class T, class Alloc>  bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+        template < T, Alloc>
+        bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 
         /**
          * The contents of container x are exchanged with those of y.
@@ -512,7 +513,7 @@ namespace ft {
          * @param x vector containers of the same type (i.e., having both the same template parameters, T and Alloc).
          * @param y see -> x
          */
-        template <class T, class Alloc>
+        template < T, Alloc>
         void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 
     }; // class vector
