@@ -9,6 +9,7 @@
 #include "random_access_iterator.hpp"
 #include "iterator.hpp"
 #include "reverse_iterator.hpp"
+#include "utils.hpp"
 
 namespace ft {
 
@@ -23,8 +24,6 @@ namespace ft {
     class vector {
     public:
 
-        //TODO: create "random_access_iterator"
-        //TODO: create "reverse_iterator"
         /* ===========================================================================================================
          * PUBLIC MEMBER TYPES
          * =========================================================================================================*/
@@ -68,7 +67,6 @@ namespace ft {
 
     public:
 
-        //TODO: implement constructors/destructor/operator=
         /* ===========================================================================================================
          * PUBLIC MEMBER FUNCTIONS => CONSTRUCTOR / DESTRUCTOR / operator=
          * =========================================================================================================*/
@@ -78,7 +76,8 @@ namespace ft {
          * Constructs an empty container, with no elements.
          * @param alloc Allocator object.
          */
-        explicit vector (const allocator_type& alloc = allocator_type());
+        explicit vector (const allocator_type& alloc = allocator_type())
+            : _alloc(alloc), _start(0), _end(0), _end_capacity(0) {};
 
         /**
          * fill constructor
@@ -91,7 +90,13 @@ namespace ft {
          * @param alloc Allocator object.
          */
         explicit vector (size_type n, const value_type& val = value_type(),
-                         const allocator_type& alloc = allocator_type());
+                         const allocator_type& alloc = allocator_type())
+                         : _alloc(alloc) {
+            this->_start = this->_alloc.allocate(n);
+            this->_end = this->_start;
+            this->_end_capacity = this->_start + n;
+            while (n--) this->_alloc.construct(this->_end++, val);
+        }
 
         /**
          * range constructor
@@ -107,7 +112,14 @@ namespace ft {
          * @param alloc Allocator object.
          */
         template <class InputIterator>
-        vector (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type());
+        vector (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
+            : _alloc(alloc) {
+            size_type n = ft::distance(first, last);
+            this->_start = this->_alloc.allocate(n);
+            this->_end_capacity = this->_start + n;
+            this->_end = this->_start;
+            while (n--) this->_alloc.construct(this->_end++, *first++);
+        }
 
         /**
          * copy constructor
@@ -115,20 +127,37 @@ namespace ft {
          * @param x Another vector object of the same type (with the same class template arguments T and Alloc),
          * whose contents are either copied or acquired.
          */
-        vector (const vector& x);
+        vector (const vector& x) : _alloc(x._alloc){
+            size_type n = x.size();
+            this->_start = this->_alloc.allocate(n);
+            this->_end_capacity = this->_start + n;
+            this->_end = this->_start;
+
+            pointer other = x._start;
+            while (n--) this->_alloc.construct(this->_end++, *other++);
+        }
 
         /**
          * This destroys all container elements, and deallocates all the storage capacity allocated
          * by the vector using its allocator.
          */
-        ~vector();
+        ~vector() {
+            this->clear();
+            this->_alloc.deallocate(this->_start, this->capacity());
+        }
 
         /**
          * Copies all the elements from x into the container.
          * @param x A vector object of the same type (i.e., with the same template parameters, T and Alloc).
          * @return *this
          */
-        vector& operator= (const vector& x);
+        vector& operator= (const vector& x) {
+            if (this != &x) {
+                this->clear();
+                this->insert(this->_start, x.begin(), x.end());
+            }
+            return *this;
+        }
 
 
         //TODO: implement iterator functions
