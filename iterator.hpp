@@ -40,7 +40,7 @@ namespace ft {
      * @tparam Reference Type to represent a reference to an element pointed by the iterator.
      */
     template <class Category, class T, class Distance = std::ptrdiff_t, class Pointer = T*, class Reference = T&>
-    struct iterator {
+    class iterator {
     public:
         typedef Category    iterator_category;
         typedef T           value_type;
@@ -61,7 +61,7 @@ namespace ft {
      * @tparam Iterator ft::iterator
      */
     template< class Iterator >
-    struct iterator_traits {
+    class iterator_traits {
         typedef typename Iterator::difference_type      difference_type;
         typedef typename Iterator::value_type           value_type;
         typedef typename Iterator::pointer              pointer;
@@ -70,7 +70,7 @@ namespace ft {
     };
 
     template< class T >
-    struct iterator_traits<T*> {
+    class iterator_traits<T*> {
         typedef ptrdiff_t                       difference_type;
         typedef T                               value_type;
         typedef T*                              pointer;
@@ -79,7 +79,7 @@ namespace ft {
     };
 
     template< class T >
-    struct iterator_traits<const T*> {
+    class iterator_traits<const T*> {
         typedef ptrdiff_t                       difference_type;
         typedef T                               value_type;
         typedef const T*                        pointer;
