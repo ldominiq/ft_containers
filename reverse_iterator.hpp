@@ -6,6 +6,7 @@
 #define FT_CONTAINERS_REVERSE_ITERATOR_HPP
 
 #include "iterator.hpp"
+#include "random_access_iterator.hpp"
 
 /* ===========================================================================================================
  * REVERSE_ITERATOR
@@ -17,20 +18,19 @@ namespace ft {
     class reverse_iterator {
     protected:
         Iterator _current;
-        typedef ft::iterator_traits<Iterator>	traits_type;
 
     public:
         typedef Iterator								iterator_type;
-        typedef typename traits_type::iterator_category	iterator_category;
-        typedef typename traits_type::value_type		value_type;
-        typedef typename traits_type::difference_type	difference_type;
-        typedef typename traits_type::pointer			pointer;
-        typedef typename traits_type::reference			reference;
+        typedef typename Iterator::iterator_category	iterator_category;
+        typedef typename Iterator::value_type		    value_type;
+        typedef typename Iterator::difference_type	    difference_type;
+        typedef typename Iterator::pointer			    pointer;
+        typedef typename Iterator::reference			reference;
 
     public:
         reverse_iterator() : _current(){}
 
-        explicit reverse_iterator(iterator_type it) : _current(it){}
+        explicit reverse_iterator(const iterator_type& it) : _current(it){}
 
         template < class Iter >
         reverse_iterator(const reverse_iterator< Iter >& rev_it) : _current(rev_it.base()) {}
@@ -39,7 +39,9 @@ namespace ft {
 
         iterator_type base() const { return _current; }
 
-        operator reverse_iterator< const Iterator >() const { return this->_current; }
+        operator reverse_iterator<ft::random_access_iterator<const value_type> >() const {
+            return (reverse_iterator<ft::random_access_iterator<const value_type> >(this->base()));
+        }
 
         reference operator*() const {
             iterator_type tmp_iter = _current;
