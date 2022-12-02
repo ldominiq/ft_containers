@@ -84,7 +84,7 @@ namespace ft {
         }
 
         difference_type             operator-(const random_access_iterator& iter) {
-            return ft::iterator<random_access_iterator_tag, T>::difference_type(iter.getPtr(), this->getPtr());
+            return (iter._ptr - _ptr);
         }
 
         reference                   operator*(){ return *_ptr; }
