@@ -160,7 +160,6 @@ namespace ft {
         }
 
 
-        //TODO: implement iterator functions
         /* ===========================================================================================================
          * PUBLIC MEMBER FUNCTIONS => ITERATORS
          * =========================================================================================================*/
@@ -171,13 +170,13 @@ namespace ft {
          * this function returns a random access iterator pointing to it.
          * @return An iterator to the beginning of the sequence container.
          */
-        iterator begin();
+        iterator begin() { return iterator(this->_start); }
 
         /**
          * Returns an iterator pointing to the first element in the vector.
          * @return An iterator to the beginning of the sequence container.
          */
-        const_iterator begin() const;
+        const_iterator begin() const { return const_iterator(this->_start); }
 
         /**
          * Returns an iterator referring to the past-the-end element in the vector container.
@@ -185,13 +184,13 @@ namespace ft {
          * It does not point to any element, and thus shall not be dereferenced.
          * @return An iterator to the element past the end of the sequence.
          */
-        iterator end();
+        iterator end() { return this->_end_capacity; }
 
         /**
          * Returns an iterator referring to the past-the-end element in the vector container.
          * @return An iterator to the element past the end of the sequence.
          */
-        const_iterator end() const;
+        const_iterator end() const { return this->_end_capacity; }
 
         /**
          * Returns a reverse iterator pointing to the last element in the vector (i.e., its reverse beginning).
@@ -199,30 +198,29 @@ namespace ft {
          * rbegin points to the element right before the one that would be pointed to by member end.
          * @return A reverse iterator to the reverse beginning of the sequence container.
          */
-        reverse_iterator rbegin();
+        reverse_iterator rbegin() { return reverse_iterator(end()); }
 
         /**
          * Returns a reverse iterator pointing to the last element in the vector (i.e., its reverse beginning).
          * @return A reverse iterator to the reverse beginning of the sequence container.
          */
-        const_reverse_iterator rbegin() const;
+        const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
 
         /**
          * Returns a reverse iterator pointing to the theoretical element preceding the first element in the vector
          * (which is considered its reverse end).
          * @return A reverse iterator to the reverse end of the sequence container.
          */
-        reverse_iterator rend();
+        reverse_iterator rend() { return reverse_iterator(begin()); }
 
         /**
          * Returns a reverse iterator pointing to the theoretical element preceding the first element in the vector
          * (which is considered its reverse end).
          * @return A reverse iterator to the reverse end of the sequence container.
          */
-        const_reverse_iterator rend() const;
+        const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 
 
-        //TODO: implement capacity functions
         /* ===========================================================================================================
          * PUBLIC MEMBER FUNCTIONS => CAPACITY
          * =========================================================================================================*/
@@ -233,14 +231,13 @@ namespace ft {
          * which is not necessarily equal to its storage capacity.
          * @return The number of elements in the container.
          */
-        size_type size() const;
+        size_type size() const { return size_type(this->_end_capacity - this->_start); }
 
         /**
          * Returns the maximum number of elements that the vector can hold.
          * @return The maximum number of elements a vector container can hold as content.
          */
-        size_type max_size() const;
-
+        size_type max_size() const { return size_type(_alloc.max_size()); }
         /**
          * Resizes the container so that it contains n elements.
          * @param n New container size, expressed in number of elements.
@@ -249,28 +246,89 @@ namespace ft {
          * Member type value_type is the type of the elements in the container,
          * defined in vector as an alias of the first template parameter (T).
          */
-        void resize (size_type n, value_type val = value_type());
+        void resize (size_type n, value_type val = value_type()) {
+            if (n > size())
+                fill_insert(n, val);
+            else if (n < size()) {
+                destruct(this->_start + n, this->_end_capacity);
+                this->_end_capacity = this->_start + n;
+            }
+        }
 
         /**
          * Returns the size of the storage space currently allocated for the vector, expressed in terms of elements.
          * @return The size of the currently allocated storage capacity in the vector,
          * measured in terms of the number elements it can hold.
          */
-        size_type capacity() const;
+        size_type capacity() const { return size_type(this->_end - this->_start); }
 
         /**
          * Returns whether the vector is empty (i.e. whether its size is 0).
          * @return true if the container size is 0, false otherwise.
          */
-        bool empty() const;
+        bool empty() const { return _start == _end_capacity; }
 
         /**
          * Requests that the vector capacity be at least enough to contain n elements.
          * @param n Minimum capacity for the vector.
          * Note that the resulting vector capacity may be equal or greater than n.
          */
-        void reserve (size_type n);
+        void reserve (size_type n) {
+            if (n > capacity())
+                grow(n);
+        }
 
+    protected:
+        void grow(size_type n) {
+            if(!this->_start) {
+                init_allocate(n);
+                return;
+            }
+            pointer oldstart = this->_start;
+            pointer oldend = this->_end;
+            size_type s = size();
+            this->_start = _alloc.allocate(n, this->_start);
+            for (size_type i = 0; i < s; ++i){
+                _alloc.construct(this->_start + i, *(oldstart + i));
+                _alloc.destroy(oldstart + i);
+            }
+            this->_end = this->_start + n;
+            this->_end_capacity = this->_start + s;
+            if (oldend - oldstart > 0)
+                _alloc.deallocate(oldstart, oldend - oldstart);
+        }
+
+        void init_allocate(size_type n) {
+            _start = _alloc.allocate(n);
+            this->_end_capacity = this->_start;
+            _end = this->_start + n;
+        }
+
+        void fill_insert(size_type n, reference v) {
+            if (n > capacity()) {
+                if (this->_start)
+                    grow(n);
+                else
+                    init_allocate(n);
+            }
+            while (this->_end_capacity != this->_end) {
+                _alloc.construct(this->_end_capacity, v);
+                this->_end_capacity++;
+            }
+        }
+
+        void destruct(pointer start, pointer end) {
+            if (start)
+            {
+                while (start != end)
+                {
+                    _alloc.destroy(start);
+                    start++;
+                }
+            }
+        }
+
+    public:
 
         //TODO: implement element access functions
         /* ===========================================================================================================
@@ -375,7 +433,13 @@ namespace ft {
          * -and only if- the new vector size surpasses the current vector capacity.
          * @param val Value to be copied (or moved) to the new element.
          */
-        void push_back (const value_type& val);
+        void push_back (const value_type& val) {
+            if (this->_end_capacity == this->_end) {
+                grow((capacity() ? capacity() * 2 : 1));
+            }
+            *this->_end_capacity = val;
+            this->_end_capacity++;
+        }
 
         /**
          * Removes the last element in the vector, effectively reducing the container size by one.
@@ -443,7 +507,7 @@ namespace ft {
         /**
          * Removes all elements from the vector (which are destroyed), leaving the container with a size of 0.
          */
-        void clear();
+        void clear() { destruct(this->_start, this->_end_capacity); this->_end_capacity = this->_start; }
 
 
         //TODO: implement allocator function
@@ -457,95 +521,97 @@ namespace ft {
          */
         allocator_type get_allocator() const;
 
-
-        //TODO: implement overloads functions
-        /* ===========================================================================================================
-         * NON MEMBER FUNCTION OVERLOADS
-         * =========================================================================================================*/
-
-        /**
-         * Performs the appropriate comparison operation between the vector containers lhs and rhs.
-         * @tparam T
-         * @tparam Alloc
-         * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
-         * having both the same template parameters (T and Alloc).
-         * @param rhs see -> lhs
-         * @return true if the condition holds, and false otherwise.
-         */
-        template < T, Alloc>
-        bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-
-        /**
-         * Performs the appropriate comparison operation between the vector containers lhs and rhs.
-         * @tparam T
-         * @tparam Alloc
-         * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
-         * having both the same template parameters (T and Alloc).
-         * @param rhs see -> lhs
-         * @return true if the condition holds, and false otherwise.
-         */
-        template < T, Alloc>
-        bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-
-        /**
-         * Performs the appropriate comparison operation between the vector containers lhs and rhs.
-         * @tparam T
-         * @tparam Alloc
-         * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
-         * having both the same template parameters (T and Alloc).
-         * @param rhs see -> lhs
-         * @return true if the condition holds, and false otherwise.
-         */
-        template < T, Alloc>
-        bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-
-        /**
-         * Performs the appropriate comparison operation between the vector containers lhs and rhs.
-         * @tparam T
-         * @tparam Alloc
-         * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
-         * having both the same template parameters (T and Alloc).
-         * @param rhs see -> lhs
-         * @return true if the condition holds, and false otherwise.
-         */
-        template < T, Alloc>
-        bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-
-        /**
-         * Performs the appropriate comparison operation between the vector containers lhs and rhs.
-         * @tparam T
-         * @tparam Alloc
-         * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
-         * having both the same template parameters (T and Alloc).
-         * @param rhs see -> lhs
-         * @return true if the condition holds, and false otherwise.
-         */
-        template < T, Alloc>
-        bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-
-        /**
-         * Performs the appropriate comparison operation between the vector containers lhs and rhs.
-         * @tparam T
-         * @tparam Alloc
-         * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
-         * having both the same template parameters (T and Alloc).
-         * @param rhs see -> lhs
-         * @return true if the condition holds, and false otherwise.
-         */
-        template < T, Alloc>
-        bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-
-        /**
-         * The contents of container x are exchanged with those of y.
-         * Both container objects must be of the same type (same template parameters), although sizes may differ.
-         * @tparam T
-         * @tparam Alloc
-         * @param x vector containers of the same type (i.e., having both the same template parameters, T and Alloc).
-         * @param y see -> x
-         */
-        template < T, Alloc>
-        void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
-
     }; // class vector
+
+
+    //TODO: implement overloads functions
+    /* ===========================================================================================================
+     * NON MEMBER FUNCTION OVERLOADS
+     * =========================================================================================================*/
+
+    /**
+     * Performs the appropriate comparison operation between the vector containers lhs and rhs.
+     * @tparam T
+     * @tparam Alloc
+     * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
+     * having both the same template parameters (T and Alloc).
+     * @param rhs see -> lhs
+     * @return true if the condition holds, and false otherwise.
+     */
+    template<typename T, class Alloc>
+    bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+
+    /**
+     * Performs the appropriate comparison operation between the vector containers lhs and rhs.
+     * @tparam T
+     * @tparam Alloc
+     * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
+     * having both the same template parameters (T and Alloc).
+     * @param rhs see -> lhs
+     * @return true if the condition holds, and false otherwise.
+     */
+    template<typename T, class Alloc>
+    bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+
+    /**
+     * Performs the appropriate comparison operation between the vector containers lhs and rhs.
+     * @tparam T
+     * @tparam Alloc
+     * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
+     * having both the same template parameters (T and Alloc).
+     * @param rhs see -> lhs
+     * @return true if the condition holds, and false otherwise.
+     */
+    template<typename T, class Alloc>
+    bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+
+    /**
+     * Performs the appropriate comparison operation between the vector containers lhs and rhs.
+     * @tparam T
+     * @tparam Alloc
+     * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
+     * having both the same template parameters (T and Alloc).
+     * @param rhs see -> lhs
+     * @return true if the condition holds, and false otherwise.
+     */
+    template<typename T, class Alloc>
+    bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+
+    /**
+     * Performs the appropriate comparison operation between the vector containers lhs and rhs.
+     * @tparam T
+     * @tparam Alloc
+     * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
+     * having both the same template parameters (T and Alloc).
+     * @param rhs see -> lhs
+     * @return true if the condition holds, and false otherwise.
+     */
+    template<typename T, class Alloc>
+    bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+
+    /**
+     * Performs the appropriate comparison operation between the vector containers lhs and rhs.
+     * @tparam T
+     * @tparam Alloc
+     * @param lhs vector containers (to the left- and right-hand side of the operator, respectively),
+     * having both the same template parameters (T and Alloc).
+     * @param rhs see -> lhs
+     * @return true if the condition holds, and false otherwise.
+     */
+    template<typename T, class Alloc>
+    bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+
+    /**
+     * The contents of container x are exchanged with those of y.
+     * Both container objects must be of the same type (same template parameters), although sizes may differ.
+     * @tparam T
+     * @tparam Alloc
+     * @param x vector containers of the same type (i.e., having both the same template parameters, T and Alloc).
+     * @param y see -> x
+     */
+    template<typename T, class Alloc>
+    void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
+
+
 } //namespace ft
 #endif //FT_VECTOR_HPP
