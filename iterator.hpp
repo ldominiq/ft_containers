@@ -62,6 +62,7 @@ namespace ft {
      */
     template< class Iterator >
     class iterator_traits {
+    public:
         typedef typename Iterator::difference_type      difference_type;
         typedef typename Iterator::value_type           value_type;
         typedef typename Iterator::pointer              pointer;
@@ -71,6 +72,7 @@ namespace ft {
 
     template< class T >
     class iterator_traits<T*> {
+    public:
         typedef ptrdiff_t                       difference_type;
         typedef T                               value_type;
         typedef T*                              pointer;
@@ -80,12 +82,25 @@ namespace ft {
 
     template< class T >
     class iterator_traits<const T*> {
+    public:
         typedef ptrdiff_t                       difference_type;
         typedef T                               value_type;
         typedef const T*                        pointer;
         typedef const T&                        reference;
         typedef ft::random_access_iterator_tag  iterator_category;
     };
+
+    template < typename InputIterator >
+    typename iterator_traits<InputIterator>::difference_type distance(InputIterator first, InputIterator last)
+    {
+        typename iterator_traits<InputIterator>::difference_type n = 0;
+        while (first != last)
+        {
+            ++first;
+            ++n;
+        }
+        return n;
+    }
 }
 
 #endif //FT_ITERATOR_HPP
