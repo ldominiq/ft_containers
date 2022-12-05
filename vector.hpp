@@ -602,18 +602,19 @@ namespace ft {
          * the function call. This is the container end if the operation erased the last element in the sequence.
          */
         iterator erase (iterator first, iterator last) {
-            if (first == last)
-                return (last);
-            difference_type diff = last - first;
-            for(; first != last; first++)
-                _alloc.destroy(first.base());
-            for (; last.base() != _end; last++)
-            {
-                _alloc.construct((last - diff).base(), *last);
-                _alloc.destroy(last.base());
+            const size_type n = ft::distance(first, last);
+
+            destruct( &(*(first)), &(*(last)) );
+
+            iterator f = first;
+            while (last < end()) {
+                *f = *last;
+                last++;
+                f++;
             }
-            _end -= diff;
-            return (first - diff);
+            this->_end_capacity -= n;
+
+            return first;
         }
 
         /**
