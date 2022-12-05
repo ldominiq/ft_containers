@@ -154,6 +154,8 @@ namespace ft {
          * @return *this
          */
         vector& operator= (const vector& x) {
+            if (this == &x)
+                return *this;
             assign( x.begin(), x.end() );
             return *this;
         }
