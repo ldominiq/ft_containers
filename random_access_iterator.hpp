@@ -84,11 +84,16 @@ namespace ft {
         }
 
         difference_type             operator-(const random_access_iterator& iter) {
-            return (iter._ptr - _ptr);
+            return (_ptr - iter._ptr);
         }
 
         reference                   operator*(){ return *_ptr; }
         pointer                     operator->(){ return _ptr; }
+
+        pointer base(void) const
+        {
+            return (_ptr);
+        }
 
         reference operator[](int index) { return _ptr[index]; }
         reference operator[](int index) const { return _ptr[index]; }
