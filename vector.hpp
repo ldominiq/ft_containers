@@ -6,10 +6,12 @@
 #define FT_VECTOR_HPP
 
 #include <memory>
+#include <stdexcept>
 #include "random_access_iterator.hpp"
 #include "iterator.hpp"
 #include "reverse_iterator.hpp"
-#include "utils.hpp"
+#include "type_traits.hpp"
+#include "algorithm.hpp"
 
 namespace ft {
 
@@ -152,10 +154,7 @@ namespace ft {
          * @return *this
          */
         vector& operator= (const vector& x) {
-            if (this != &x) {
-                this->clear();
-                this->insert(this->_start, x.begin(), x.end());
-            }
+            assign( x.begin(), x.end() );
             return *this;
         }
 
@@ -330,7 +329,6 @@ namespace ft {
 
     public:
 
-        //TODO: implement element access functions
         /* ===========================================================================================================
          * PUBLIC MEMBER FUNCTIONS => ELEMENT ACCESS
          * =========================================================================================================*/
@@ -343,14 +341,14 @@ namespace ft {
          * @param n Position of an element in the container.
          * @return The element at the specified position in the vector.
          */
-        reference operator[] (size_type n);
+        reference operator[] (size_type n) { return *(this->_start + n); }
 
         /**
          * Returns a reference to the element at position n in the vector container.
          * @param n Position of an element in the container.
          * @return The element at the specified position in the vector.
          */
-        const_reference operator[] (size_type n) const;
+        const_reference operator[] (size_type n) const { return *(this->_start + n); }
 
         /**
          * Returns a reference to the element at position n in the vector.
@@ -360,14 +358,30 @@ namespace ft {
          * @param n Position of an element in the container.
          * @return The element at the specified position in the container.
          */
-        reference at (size_type n);
+        reference at (size_type n) {
+            if (n >= size())
+            {
+                // The index is out of range, so throw an exception.
+                throw std::out_of_range("Index out of range");
+            }
+
+            return (*this)[n];
+        }
 
         /**
          * Returns a reference to the element at position n in the vector.
          * @param n Position of an element in the container.
          * @return The element at the specified position in the container.
          */
-        const_reference at (size_type n) const;
+        const_reference at (size_type n) const {
+            if (n >= size())
+            {
+                // The index is out of range, so throw an exception.
+                throw std::out_of_range("Index out of range");
+            }
+
+            return (*this)[n];
+        }
 
         /**
          * Returns a reference to the first element in the vector.
@@ -375,13 +389,13 @@ namespace ft {
          * this function returns a direct reference.
          * @return A reference to the first element in the vector container.
          */
-        reference front();
+        reference front() { return *begin(); }
 
         /**
          * Returns a reference to the first element in the vector.
          * @return A reference to the first element in the vector container.
          */
-        const_reference front() const;
+        const_reference front() const { return *begin(); }
 
         /**
          * Returns a reference to the last element in the vector.
@@ -389,16 +403,15 @@ namespace ft {
          * this function returns a direct reference.
          * @return A reference to the last element in the vector.
          */
-        reference back();
+        reference back() { return *(end() - 1); }
 
         /**
          * Returns a reference to the last element in the vector.
          * @return A reference to the last element in the vector.
          */
-        const_reference back() const;
+        const_reference back() const { return *(end() - 1); }
 
 
-        //TODO: implement modifiers functions
         /* ===========================================================================================================
          * PUBLIC MEMBER FUNCTIONS => MODIFIERS
          * =========================================================================================================*/
@@ -414,7 +427,23 @@ namespace ft {
          * @param last see -> first
          */
         template <class InputIterator>
-        void assign (InputIterator first, InputIterator last);
+        void assign( InputIterator first, InputIterator last,
+                     typename ft::enable_if< !ft::is_integral< InputIterator >::value, int >::type = 0) {
+            const size_type n = ft::distance(first, last);
+
+            if (size()) {
+                destruct(this->_start, this->_end_capacity);
+                _end_capacity = _start;
+            }
+            if (n > capacity())
+                grow(n);
+            while (first != last) {
+                _alloc.construct(_end_capacity, (*first));
+                ++first;
+                ++_end_capacity;
+
+            }
+        }
 
         /**
          * Assigns new contents to the vector, replacing its current contents, and modifying its size accordingly.
@@ -423,7 +452,15 @@ namespace ft {
          * @param val Value to fill the container with.
          * Each of the n elements in the container will be initialized to a copy of this value.
          */
-        void assign (size_type n, const value_type& val);
+        void assign (size_type n, const value_type& val) {
+            destruct(_start, _end_capacity);
+            if (n > capacity())
+                grow(n);
+            _end_capacity = _start + n;
+            while ( n-- ) {
+                _alloc.construct((_start + n), val);
+            }
+        }
 
         /**
          * Adds a new element at the end of the vector, after its current last element.
@@ -444,7 +481,13 @@ namespace ft {
         /**
          * Removes the last element in the vector, effectively reducing the container size by one.
          */
-        void pop_back();
+        void pop_back() {
+            if (size() > 0)
+            {
+                this->_end_capacity--;
+                this->_alloc.destroy(this->_end_capacity);
+            }
+        }
 
         /**
          * The vector is extended by inserting new elements before the element at the specified position,
@@ -453,7 +496,11 @@ namespace ft {
          * @param val Value to be copied (or moved) to the inserted elements.
          * @return An iterator that points to the first of the newly inserted elements.
          */
-        iterator insert (iterator position, const value_type& val);
+        iterator insert (iterator position, const value_type& val) {
+            size_type i = ft::distance(begin(), position);
+            insert (position , 1, val);
+            return iterator(_start + i);
+        }
 
         /**
          * The vector is extended by inserting new elements before the element at the specified position,
@@ -462,7 +509,30 @@ namespace ft {
          * @param n Number of elements to insert. Each element is initialized to a copy of val.
          * @param val Value to be copied (or moved) to the inserted elements.
          */
-        void insert (iterator position, size_type n, const value_type& val);
+        void insert (iterator position, size_type n, const value_type& val) {
+            if (n + size() > max_size())
+                throw std::length_error("Length error: vector::insert");
+
+            size_type i = ft::distance(begin(), position);
+
+            if (size() + n > capacity())
+                grow(size() + n);
+
+            pointer elem = this->_start + i;
+
+            if ( elem != this->_end_capacity ) {
+                pointer cur = this->_end_capacity - 1;
+                while ( cur >= elem ) {
+                    *(cur + n) = *(cur);
+                    cur--;
+                }
+            }
+            for (size_t i = 0; i < n; i++) {
+                *(elem) = val;
+                elem++;
+            }
+            this->_end_capacity += n;
+        }
 
         /**
          * The vector is extended by inserting new elements before the element at the specified position,
@@ -474,7 +544,33 @@ namespace ft {
          * @param last see -> first
          */
         template <class InputIterator>
-        void insert (iterator position, InputIterator first, InputIterator last);
+        void insert( iterator pos, InputIterator first, InputIterator last, typename ft::enable_if< !ft::is_integral< InputIterator >::value, int >::type = 0) {
+
+            const size_type n = ft::distance(first, last);
+
+            if (n + size() > max_size())
+                throw std::length_error("Length error: vector::insert");
+
+            size_type i = ft::distance(begin(), pos);
+
+            if (size() + n > capacity())
+                grow(size() + n);
+
+            pointer elem = this->_start + i;
+
+            if ( elem != this->_end_capacity ) {
+                pointer cur = this->_end_capacity - 1;
+                while ( cur >= elem ) {
+                    *(cur + n) = *(cur);
+                    cur--;
+                }
+            }
+            for (size_t i = 0; i < n; i++) {
+                *(elem) = *(first + i);
+                elem++;
+            }
+            this->_end_capacity += n;
+        }
 
         /**
          * Removes from the vector either a single element (position) or a range of elements ([first,last)).
@@ -482,7 +578,19 @@ namespace ft {
          * @return An iterator pointing to the new location of the element that followed the last element erased by
          * the function call. This is the container end if the operation erased the last element in the sequence.
          */
-        iterator erase (iterator position);
+        iterator erase (iterator position) {
+            if (position == end())
+                return position;
+
+            size_type i = size() - ft::distance(position, end());
+
+            while (i < size() - 1) {
+                this->_start[i] = this->_start[i + 1];
+                i++;
+            }
+            pop_back();
+            return position;
+        }
 
         /**
          * Removes from the vector either a single element (position) or a range of elements ([first,last)).
@@ -493,7 +601,20 @@ namespace ft {
          * @return An iterator pointing to the new location of the element that followed the last element erased by
          * the function call. This is the container end if the operation erased the last element in the sequence.
          */
-        iterator erase (iterator first, iterator last);
+        iterator erase (iterator first, iterator last) {
+            if (first == last)
+                return (last);
+            difference_type diff = last - first;
+            for(; first != last; first++)
+                _alloc.destroy(first.base());
+            for (; last.base() != _end; last++)
+            {
+                _alloc.construct((last - diff).base(), *last);
+                _alloc.destroy(last.base());
+            }
+            _end -= diff;
+            return (first - diff);
+        }
 
         /**
          * Exchanges the content of the container by the content of x, which is another vector object of the same type.
@@ -502,7 +623,11 @@ namespace ft {
          * (i.e., instantiated with the same template parameters, T and Alloc)
          * whose content is swapped with that of this container.
          */
-        void swap (vector& x);
+        void swap (vector<T,Alloc>& x) {
+            ft::swap(this->_start, x._start);
+            ft::swap(this->_end, x._end);
+            ft::swap(this->_end_capacity, x._end_capacity);
+        }
 
         /**
          * Removes all elements from the vector (which are destroyed), leaving the container with a size of 0.
@@ -510,7 +635,6 @@ namespace ft {
         void clear() { destruct(this->_start, this->_end_capacity); this->_end_capacity = this->_start; }
 
 
-        //TODO: implement allocator function
         /* ===========================================================================================================
          * PUBLIC MEMBER FUNCTIONS => ALLOCATOR
          * =========================================================================================================*/
@@ -519,7 +643,7 @@ namespace ft {
          * Returns a copy of the allocator object associated with the vector.
          * @return The allocator.
          */
-        allocator_type get_allocator() const;
+        allocator_type get_allocator() const { return this->_alloc; }
 
     }; // class vector
 
@@ -539,7 +663,16 @@ namespace ft {
      * @return true if the condition holds, and false otherwise.
      */
     template<typename T, class Alloc>
-    bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+    bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+        if (!(lhs.size() == rhs.size()))
+            return false;
+        for (size_t i = 0; i != lhs.size(); ++i)
+        {
+            if (!(lhs[i] == rhs[i]))
+                return false;
+        }
+        return true;
+    }
 
     /**
      * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -551,7 +684,16 @@ namespace ft {
      * @return true if the condition holds, and false otherwise.
      */
     template<typename T, class Alloc>
-    bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+    bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+        if (!(lhs.size() == rhs.size()))
+            return true;
+        for (size_t i = 0; i < lhs.size(); ++i)
+        {
+            if (!(lhs[i] != rhs[i]))
+                return false;
+        }
+        return true;
+    }
 
     /**
      * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -563,7 +705,9 @@ namespace ft {
      * @return true if the condition holds, and false otherwise.
      */
     template<typename T, class Alloc>
-    bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+    bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+    }
 
     /**
      * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -575,7 +719,9 @@ namespace ft {
      * @return true if the condition holds, and false otherwise.
      */
     template<typename T, class Alloc>
-    bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+    bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::less_equal<T>());
+    }
 
     /**
      * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -587,7 +733,9 @@ namespace ft {
      * @return true if the condition holds, and false otherwise.
      */
     template<typename T, class Alloc>
-    bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+    bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::greater<T>());
+    }
 
     /**
      * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -599,7 +747,9 @@ namespace ft {
      * @return true if the condition holds, and false otherwise.
      */
     template<typename T, class Alloc>
-    bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+    bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::greater_equal<T>());
+    }
 
     /**
      * The contents of container x are exchanged with those of y.
@@ -610,7 +760,9 @@ namespace ft {
      * @param y see -> x
      */
     template<typename T, class Alloc>
-    void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
+    void swap (vector<T,Alloc>& x, vector<T,Alloc>& y) {
+        x.swap(y);
+    }
 
 
 } //namespace ft
