@@ -33,24 +33,6 @@ namespace ft {
         template<class U, class V>
         explicit pair(const pair<const U, V>& pr) : first(pr.first), second(pr.second) {}
 
-        friend bool operator== (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
-        { return lhs.first==rhs.first && lhs.second==rhs.second; }
-
-        friend bool operator!= (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
-        { return lhs != rhs; }
-
-        friend bool operator<  (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
-        { return lhs.first < rhs.first || (rhs.first >= lhs.first && lhs.second < rhs.second); }
-
-        friend bool operator<= (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
-        { return rhs >= lhs; }
-
-        friend bool operator>  (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
-        { return rhs<lhs; }
-
-        friend bool operator>= (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
-        { return lhs >= rhs; }
-
         pair &operator=(const pair &rhs) {
             if (this != &rhs) {
                 this->first = rhs.first;
@@ -58,8 +40,52 @@ namespace ft {
             }
             return *this;
         };
+
         ~pair() {};
+
     };
+
+    template <class T1, class T2>
+    bool operator==(const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
+    {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
+    template <class T1, class T2>
+    bool operator!=(const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    template <class T1, class T2>
+    bool operator< (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
+    {
+        return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second);
+    }
+
+    template <class T1, class T2>
+    bool operator<=(const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
+    {
+        return !(rhs < lhs);
+    }
+
+    template <class T1, class T2>
+    bool operator> (const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
+    {
+        return rhs < lhs;
+    }
+
+    template <class T1, class T2>
+    bool operator>=(const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
+    {
+        return !(lhs < rhs);
+    }
+
+    template< class T1, class T2 >
+    void swap( pair<T1,T2>& lhs, pair<T1,T2>& rhs )
+    {
+        lhs.swap(rhs);
+    }
 
     template <class T1, class T2>
     pair<T1,T2> make_pair (T1 x, T2 y) {
