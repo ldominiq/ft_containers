@@ -44,10 +44,10 @@ namespace ft {
         typedef typename allocator_type::const_pointer          const_pointer;
 
         /*  a random access iterator to value_type */
-        typedef ft::random_access_iterator<value_type>          iterator;
+        typedef ft::random_access_iterator<pointer>          iterator;
 
         /*  a random access iterator to const value_type */
-        typedef ft::random_access_iterator<const value_type>    const_iterator;
+        typedef ft::random_access_iterator<const_pointer>    const_iterator;
 
         /* 	reverse_iterator<iterator>  */
         typedef ft::reverse_iterator<iterator>                  reverse_iterator;
@@ -61,11 +61,11 @@ namespace ft {
         /*  an unsigned integral type that can represent any non-negative value of difference_type  */
         typedef typename allocator_type::size_type              size_type;
 
-    private:
-        allocator_type  _alloc;
+    protected:
         pointer         _start;
         pointer         _end;
         pointer         _end_capacity;
+        allocator_type  _alloc;
 
     public:
 
@@ -79,7 +79,7 @@ namespace ft {
          * @param alloc Allocator object.
          */
         explicit vector (const allocator_type& alloc = allocator_type())
-            : _alloc(alloc), _start(0), _end(0), _end_capacity(0) {};
+            : _start(0), _end(0), _end_capacity(0), _alloc(alloc) {};
 
         /**
          * fill constructor
@@ -93,11 +93,13 @@ namespace ft {
          */
         explicit vector (size_type n, const value_type& val = value_type(),
                          const allocator_type& alloc = allocator_type())
-                         : _alloc(alloc) {
-            this->_start = this->_alloc.allocate(n);
-            this->_end = this->_start;
-            this->_end_capacity = this->_start + n;
-            while (n--) this->_alloc.construct(this->_end++, val);
+                         : _start(0), _end(0), _end_capacity(0), _alloc(alloc) {
+            init_allocate(n);
+            this->_end_capacity = this->_start;
+            while (this->_end_capacity != this->_end) {
+                _alloc.construct(this->_end_capacity, val);
+                this->_end_capacity++;
+            }
         }
 
         /**
@@ -113,15 +115,12 @@ namespace ft {
          * a type from which value_type objects can be constructed.
          * @param alloc Allocator object.
          */
-        template <class InputIterator>
-        vector (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
-            : _alloc(alloc) {
-            size_type n = ft::distance(first, last);
-            this->_start = this->_alloc.allocate(n);
-            this->_end_capacity = this->_start + n;
-            this->_end = this->_start;
-            while (n--) this->_alloc.construct(this->_end++, *first++);
-        }
+        template<typename InputIterator>
+        vector (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type(),
+               typename ft::enable_if< !ft::is_integral< InputIterator >::value, int >::type = 0)
+                : _start(0), _end(0), _end_capacity(0), _alloc(alloc) {
+                    assign( first, last );
+                }
 
         /**
          * copy constructor
@@ -129,14 +128,8 @@ namespace ft {
          * @param x Another vector object of the same type (with the same class template arguments T and Alloc),
          * whose contents are either copied or acquired.
          */
-        vector (const vector& x) : _alloc(x._alloc){
-            size_type n = x.size();
-            this->_start = this->_alloc.allocate(n);
-            this->_end_capacity = this->_start + n;
-            this->_end = this->_start;
-
-            pointer other = x._start;
-            while (n--) this->_alloc.construct(this->_end++, *other++);
+        vector (const vector& x) : _start(0), _end(0), _end_capacity(0) {
+            *this = x;
         }
 
         /**
@@ -664,16 +657,11 @@ namespace ft {
      * @param rhs see -> lhs
      * @return true if the condition holds, and false otherwise.
      */
-    template<typename T, class Alloc>
+    template< class T, class Alloc >
     bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
-        if (!(lhs.size() == rhs.size()))
-            return false;
-        for (size_t i = 0; i != lhs.size(); ++i)
-        {
-            if (!(lhs[i] == rhs[i]))
-                return false;
-        }
-        return true;
+        if (lhs.size() != rhs.size())
+            return (false);
+        return ft::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
 
     /**
@@ -685,17 +673,8 @@ namespace ft {
      * @param rhs see -> lhs
      * @return true if the condition holds, and false otherwise.
      */
-    template<typename T, class Alloc>
-    bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
-        if (!(lhs.size() == rhs.size()))
-            return true;
-        for (size_t i = 0; i < lhs.size(); ++i)
-        {
-            if (!(lhs[i] != rhs[i]))
-                return false;
-        }
-        return true;
-    }
+    template< class T, class Alloc >
+    bool operator!=(const vector< T, Alloc > &lhs, const vector< T, Alloc > &rhs) { return !(lhs == rhs); }
 
     /**
      * Performs the appropriate comparison operation between the vector containers lhs and rhs.
@@ -722,7 +701,7 @@ namespace ft {
      */
     template<typename T, class Alloc>
     bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
-        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::less_equal<T>());
+        return !(rhs < lhs);
     }
 
     /**
@@ -736,7 +715,7 @@ namespace ft {
      */
     template<typename T, class Alloc>
     bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
-        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::greater<T>());
+        return rhs < lhs;
     }
 
     /**
@@ -750,7 +729,7 @@ namespace ft {
      */
     template<typename T, class Alloc>
     bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
-        return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::greater_equal<T>());
+        return !(lhs < rhs);
     }
 
     /**
