@@ -11,7 +11,7 @@
 #include "reverse_iterator.hpp"
 
 namespace ft {
-    //TODO: create Nested function class to compare elements -> ft::Comp
+    //TODO: create a binary search tree
     //TODO: create bidirectional iterator
     /**
      *Maps are associative containers that store elements formed by a combination of a key value and a mapped value,
@@ -33,7 +33,6 @@ namespace ft {
         typedef T                                               mapped_type;
         typedef ft::pair<const key_type, mapped_type>           value_type;
         typedef Compare                                         key_compare;
-        //typedef ft::Comp<>                                      value_compare;
         typedef Alloc                                           allocator_type;
         typedef typename allocator_type::reference              reference;
         typedef typename allocator_type::const_reference        const_reference;
@@ -45,6 +44,24 @@ namespace ft {
         //typedef ft::reverse_iterator<const_iterator>            const_reverse_iterator;
         typedef ptrdiff_t                                       difference_type;
         typedef size_t                                          size_type;
+        class value_compare : std::binary_function<value_type, value_type, bool> {
+        private:
+            value_compare() {}
+
+        protected:
+            Compare comp;
+            value_compare (const Compare &c = Compare()) : comp(c) {}
+
+        public:
+            virtual ~value_compare() {}
+            value_compare	&operator=(const value_compare &other) {
+                this->comp = other.comp;
+                return (*this);
+            }
+            bool operator()(const value_type& x, const value_type& y) const {
+                return comp(x.first, y.first);
+            }
+        };
 
     private:
 
