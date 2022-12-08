@@ -15,15 +15,15 @@ namespace ft {
      * =========================================================================================================*/
 
     /* Empty class to identify the category of an iterator as an input iterator */
-    class   input_iterator_tag {};
+    struct  input_iterator_tag {};
     /* Empty class to identify the category of an iterator as an output iterator */
-    class   output_iterator_tag {};
+    struct  output_iterator_tag {};
     /* Empty class to identify the category of an iterator as a forward iterator */
-    class   forward_iterator_tag {};
+    struct  forward_iterator_tag : public input_iterator_tag { };
     /* Empty class to identify the category of an iterator as a bidirectional iterator */
-    class   bidirectional_iterator_tag {};
+    struct  bidirectional_iterator_tag : public forward_iterator_tag { };
     /* Empty class to identify the category of an iterator as a random-access iterator */
-    class   random_access_iterator_tag {};
+    struct  random_access_iterator_tag : public bidirectional_iterator_tag { };
 
 
     /* ===========================================================================================================
@@ -39,9 +39,8 @@ namespace ft {
      * @tparam Pointer Type to represent a pointer to an element pointed by the iterator.
      * @tparam Reference Type to represent a reference to an element pointed by the iterator.
      */
-    template <class Category, class T, class Distance = std::ptrdiff_t, class Pointer = T*, class Reference = T&>
-    class iterator {
-    public:
+    template <typename Category, typename T, typename Distance = std::ptrdiff_t, typename Pointer = T*, typename Reference = T&>
+    struct iterator {
         typedef Category    iterator_category;
         typedef T           value_type;
         typedef Distance    difference_type;
@@ -60,34 +59,33 @@ namespace ft {
      * they represent by using the members of the corresponding iterator_traits instantiation.
      * @tparam Iterator ft::iterator
      */
-    template< class Iterator >
-    class iterator_traits {
-    public:
-        typedef typename Iterator::difference_type      difference_type;
-        typedef typename Iterator::value_type           value_type;
-        typedef typename Iterator::pointer              pointer;
-        typedef typename Iterator::reference            reference;
-        typedef typename Iterator::iterator_category    iterator_category;
+    template< typename Iterator >
+    struct iterator_traits {
+        typedef typename Iterator::difference_type    difference_type;
+        typedef typename Iterator::value_type         value_type;
+        typedef typename Iterator::pointer            pointer;
+        typedef typename Iterator::reference          reference;
+        typedef typename Iterator::iterator_category  iterator_category;
     };
 
-    template< class T >
-    class iterator_traits<T*> {
-    public:
-        typedef ptrdiff_t                       difference_type;
-        typedef T                               value_type;
-        typedef T*                              pointer;
-        typedef T&                              reference;
-        typedef ft::random_access_iterator_tag  iterator_category;
+    /// Partial specialization for pointer types.
+    template< typename T >
+    struct iterator_traits<T*> {
+        typedef ptrdiff_t                   difference_type;
+        typedef T                           value_type;
+        typedef T*                          pointer;
+        typedef T&                          reference;
+        typedef random_access_iterator_tag  iterator_category;
     };
 
-    template< class T >
-    class iterator_traits<const T*> {
-    public:
-        typedef ptrdiff_t                       difference_type;
-        typedef T                               value_type;
-        typedef const T*                        pointer;
-        typedef const T&                        reference;
-        typedef ft::random_access_iterator_tag  iterator_category;
+    /// Partial specialization for const pointer types.
+    template< typename T >
+    struct iterator_traits<const T*> {
+        typedef ptrdiff_t                   difference_type;
+        typedef T                           value_type;
+        typedef const T*                    pointer;
+        typedef const T&                    reference;
+        typedef random_access_iterator_tag  iterator_category;
     };
 
     template < typename InputIterator >
