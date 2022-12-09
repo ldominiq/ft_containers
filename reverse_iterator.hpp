@@ -5,12 +5,18 @@
 #ifndef FT_REVERSE_ITERATOR_HPP
 #define FT_REVERSE_ITERATOR_HPP
 
-/* ===========================================================================================================
- * REVERSE_ITERATOR
- * =========================================================================================================*/
+#include "iterator.hpp"
 
 namespace ft {
 
+    /* ===========================================================================================================
+     * REVERSE_ITERATOR => MEMBER FUNCTIONS
+     * =========================================================================================================*/
+
+    /**
+     * This class reverses the direction in which a bidirectional or random-access iterator iterates through a range.
+     * @tparam Iterator
+     */
     template< typename Iterator >
     class reverse_iterator {
     protected:
