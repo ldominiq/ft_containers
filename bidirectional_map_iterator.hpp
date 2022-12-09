@@ -81,8 +81,7 @@ namespace ft {
      * =========================================================================================================*/
 
     template<class Key, class T, bool isconst = false>
-    class bidirectional_map_iterator {
-    public:
+    struct bidirectional_map_iterator {
         typedef bidirectional_map_iterator<Key, T, isconst>                                         iterator;
         typedef std::ptrdiff_t                                                                      difference_type;
         typedef ft::bidirectional_iterator_tag                                                      iterator_category;
@@ -91,10 +90,8 @@ namespace ft {
         typedef typename choose_type<isconst, const value_type*, value_type*>::type                 pointer;
         typedef typename choose_type<isconst, const Node<value_type>*, Node<value_type>*>::type     nodeptr;
 
-    private:
         nodeptr _ptr;
 
-    public:
         bidirectional_map_iterator(): _ptr(NULL) {}
 
         bidirectional_map_iterator(nodeptr ptr): _ptr(ptr) {}
