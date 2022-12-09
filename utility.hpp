@@ -7,6 +7,16 @@
 
 namespace ft {
 
+    /* ===========================================================================================================
+     * Pair
+     * =========================================================================================================*/
+
+    /**
+     * This class couples together a pair of values, which may be of different types (T1 and T2).
+     * The individual values can be accessed through its public members first and second.
+     * @tparam T1 Type of member first, aliased as first_type.
+     * @tparam T2 Type of member second, aliased as second_type.
+     */
     template <class T1, class T2>
     struct pair {
     private:
@@ -45,6 +55,11 @@ namespace ft {
 
     };
 
+
+    /* ===========================================================================================================
+     * Relational operators for pair
+     * =========================================================================================================*/
+
     template <class T1, class T2>
     bool operator==(const pair<T1,T2>& lhs, const pair<T1,T2>& rhs)
     {
@@ -81,14 +96,33 @@ namespace ft {
         return !(lhs < rhs);
     }
 
+
+    /* ===========================================================================================================
+     * Swap
+     * =========================================================================================================*/
+
     template< class T1, class T2 >
     void swap( pair<T1,T2>& lhs, pair<T1,T2>& rhs )
     {
         lhs.swap(rhs);
     }
 
+
+    /* ===========================================================================================================
+     * Make pair
+     * =========================================================================================================*/
+
+    /**
+     * Constructs a pair object with its first element set to x and its second element set to y.
+     * @tparam T1
+     * @tparam T2
+     * @param x Values for the members first and second, respectively, of the pair object being constructed.
+     * @param y see -> x
+     * @return A pair object whose elements first and second are set to x and y respectivelly.
+     */
     template <class T1, class T2>
-    pair<T1,T2> make_pair (T1 x, T2 y) {
+    pair<T1,T2>
+    make_pair (T1 x, T2 y) {
         return (pair<T1, T2>(x, y));
     }
 }
