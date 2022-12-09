@@ -14,13 +14,20 @@
 namespace ft {
 
     template <class Compare, class T>
-    class Comp {
+    class value_comp {
     public:
 
         Compare _comp;
 
-        Comp(Compare c) : _comp(c) {}
+        value_comp(Compare c) : _comp(c) {}
 
+        /**
+         * Returns a comparison object that can be used to compare two elements to get whether the key of
+         * the first one goes before the second.
+         * @param x
+         * @param y
+         * @return The comparison object for element values.
+         */
         bool operator()(const T& x, const T& y) const { return _comp(x.first, y.first); }
     };
 
@@ -45,7 +52,7 @@ namespace ft {
         typedef T                                                               mapped_type;
         typedef ft::pair<const key_type, mapped_type>                           value_type;
         typedef Compare                                                         key_compare;
-        typedef ft::Comp<Compare, value_type>                                   value_compare;
+        typedef ft::value_comp<Compare, value_type>                             value_compare;
         typedef Alloc                                                           allocator_type;
         typedef typename allocator_type::reference                              reference;
         typedef typename allocator_type::const_reference                        const_reference;
