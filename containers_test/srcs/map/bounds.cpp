@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include <list>
+#include <chrono>
 
 #define T1 int
 #define T2 foo<int>
@@ -39,8 +40,15 @@ void	ft_const_bound(const MAP &mp, const T1 &param)
 	std::cout << "equal_range: " << (ft_range.first == it[0] && ft_range.second == it[1]) << std::endl;
 }
 
+/*
+ * Test perf
+ * g++ -DUSING_STD=1 -I../../../ bounds.cpp
+ * g++ -I../../../ bounds.cpp
+ */
+
 int		main(void)
 {
+	//std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 	std::list<T3> lst;
 	unsigned int lst_size = 10;
 	for (unsigned int i = 0; i < lst_size; ++i)
@@ -62,5 +70,10 @@ int		main(void)
 	ft_bound(mp, 7);
 
 	printSize(mp);
+
+//	std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+//	std::chrono::duration<double, std::milli> fp_ms = end - start;
+//
+//	std::cout << "time: " << fp_ms.count() << std::endl;
 	return (0);
 }
